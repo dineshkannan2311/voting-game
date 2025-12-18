@@ -383,7 +383,7 @@
 
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <script>
-        const socket = io('http://localhost:5000');
+        const socket = io('https://web-production-8966b.up.railway.app');
 
         socket.on('connect', () => {
             console.log('✅ Display connected to server');
@@ -490,7 +490,7 @@
         // Poll leaderboard every 2 seconds during voting
         setInterval(async () => {
             try {
-                const response = await fetch('http://localhost:5000/api/leaderboard');
+                const response = await fetch('https://web-production-8966b.up.railway.app/api/members?team_id=${userTeamId}');
                 const data = await response.json();
                 if (data.winners && data.winners.length > 0 && timerSeconds > 0) {
                     updateWinnerBoxes(data.winners);
