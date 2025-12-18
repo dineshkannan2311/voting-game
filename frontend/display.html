@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Office Legends - Display</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: -1000px 0; }
+            100% { background-position: 1000px 0; }
+        }
+        
+        @keyframes countdownPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            min-height: 100vh;
+            color: white;
+            overflow: hidden;
+        }
+        
+        /* WAITING STATE */
+        .waiting-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            text-align: center;
+            padding: 50px;
+            background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 50%, #ffa94d 100%);
+        }
+        
+        .waiting-screen.hide {
+            display: none;
+        }
+        
+        .logo-large {
+            font-size: 8rem;
+            font-weight: 900;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            letter-spacing: -5px;
+        }
+        
+        .waiting-subtitle {
+            font-size: 3rem;
+            font-weight: 600;
+            color: rgba(255,255,255,0.9);
+            margin-bottom: 50px;
+        }
+        
+        .pulse-dot {
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            animation: countdownPulse 1.5s ease-in-out infinite;
+        }
+        
+        /* QUESTION STATE */
+        .question-screen {
+            display: none;
+            min-height: 100vh;
+            padding: 80px 100px;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+        }
+        
+        .question-screen.show {
+            display: block;
+            animation: fadeIn 0.8s ease;
+        }
+        
+        .question-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+        
+        .question-label {
+            font-size: 1.5rem;
+            color: #ff6b35;
+            text-transform: uppercase;
+            letter-spacing: 5px;
+            font-weight: 700;
+            margin-bottom: 30px;
+        }
+        
+        .question-text {
+            font-size: 4.5rem;
+            font-weight: 800;
+            line-height: 1.2;
+            color: white;
+            max-width: 1400px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        
+        /* TIMER */
+        .timer-display {
+            background: linear-gradient(135deg, #ff6b35, #ff8c42);
+            border-radius: 40px;
+            padding: 80px;
+            text-align: center;
+            margin: 0 auto;
+            max-width: 600px;
+            box-shadow: 0 30px 80px rgba(255, 107, 53, 0.4);
+        }
+        
+        .timer-countdown {
+            font-size: 12rem;
+            font-weight: 900;
+            color: white;
+            font-family: 'SF Pro Display', -apple-system, sans-serif;
+            line-height: 1;
+            text-shadow: 0 8px 30px rgba(0,0,0,0.3);
+        }
+        
+        .timer-label {
+            font-size: 2rem;
+            color: rgba(255,255,255,0.9);
+            margin-top: 30px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            font-weight: 700;
+        }
+        
+        .timer-display.warning {
+            animation: countdownPulse 0.5s ease-in-out infinite;
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+        
+        /* RESULTS STATE */
+        .results-screen {
+            display: none;
+            min-height: 100vh;
+            padding: 60px 80px;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+        }
+        
+        .results-screen.show {
+            display: block;
+            animation: fadeIn 1s ease;
+        }
+        
+        .results-header {
+            text-align: center;
+            margin-bottom: 80px;
+        }
+        
+        .results-title {
+            font-size: 6rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #ff6b35, #ff8c42, #ffa94d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 30px;
+            letter-spacing: -3px;
+        }
+        
+        .results-question {
+            font-size: 2.5rem;
+            color: rgba(255,255,255,0.8);
+            font-weight: 600;
+        }
+        
+        /* WINNERS GRID */
+        .winners-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 40px;
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+        
+        .winner-card {
+            background: linear-gradient(135deg, #2d2d2d, #3a3a3a);
+            border-radius: 30px;
+            padding: 50px 40px;
+            display: flex;
+            align-items: center;
+            gap: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            border: 2px solid rgba(255, 107, 53, 0.3);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: slideUp 0.8s ease backwards;
+        }
+        
+        .winner-card:nth-child(1) { animation-delay: 0.1s; }
+        .winner-card:nth-child(2) { animation-delay: 0.2s; }
+        .winner-card:nth-child(3) { animation-delay: 0.3s; }
+        .winner-card:nth-child(4) { animation-delay: 0.4s; }
+        .winner-card:nth-child(5) { animation-delay: 0.5s; }
+        .winner-card:nth-child(6) { animation-delay: 0.6s; }
+        .winner-card:nth-child(7) { animation-delay: 0.7s; }
+        .winner-card:nth-child(8) { animation-delay: 0.8s; }
+        .winner-card:nth-child(9) { animation-delay: 0.9s; }
+        .winner-card:nth-child(10) { animation-delay: 1.0s; }
+        
+        .winner-card:hover {
+            transform: translateY(-10px);
+            border-color: #ff6b35;
+            box-shadow: 0 30px 80px rgba(255, 107, 53, 0.4);
+        }
+        
+        .winner-icon {
+            font-size: 5rem;
+            filter: drop-shadow(0 10px 20px rgba(255, 107, 53, 0.5));
+        }
+        
+        .winner-info {
+            flex: 1;
+        }
+        
+        .winner-name {
+            font-size: 3rem;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 15px;
+            line-height: 1.2;
+        }
+        
+        .winner-team {
+            font-size: 1.8rem;
+            color: #ff6b35;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+    </style>
+</head>
+<body>
+    <!-- WAITING STATE -->
+    <div class="waiting-screen" id="waitingScreen">
+        <div class="logo-large">OFFICE LEGENDS</div>
+        <div class="waiting-subtitle">Waiting for next question...</div>
+        <div class="pulse-dot"></div>
+    </div>
+
+    <!-- QUESTION STATE -->
+    <div class="question-screen" id="questionScreen">
+        <div class="question-header">
+            <div class="question-label">Current Question</div>
+            <div class="question-text" id="questionText"></div>
+        </div>
+        
+        <div class="timer-display" id="timerDisplay">
+            <div class="timer-countdown" id="timerCountdown">00:30</div>
+            <div class="timer-label">Time Remaining</div>
+        </div>
+    </div>
+
+    <!-- RESULTS STATE -->
+    <div class="results-screen" id="resultsScreen">
+        <div class="results-header">
+            <div class="results-title">🏆 WINNERS 🏆</div>
+            <div class="results-question" id="resultsQuestion"></div>
+        </div>
+        <div class="winners-grid" id="winnersGrid"></div>
+    </div>
+
+    <script>
+        const API_URL = window.location.origin;
+        
+        let lastState = null;
+        let isShowingResults = false;
+
+        async function checkState() {
+            // STOP polling if we're showing results
+            if (isShowingResults) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/api/current-state`);
+                const state = await response.json();
+                
+                // Detect state changes
+                const stateChanged = JSON.stringify(state) !== JSON.stringify(lastState);
+                
+                if (stateChanged) {
+                    lastState = state;
+                    
+                    if (state.current_question) {
+                        if (state.show_results && state.results) {
+                            showResults(state.current_question.text, state.results);
+                        } else {
+                            showQuestion(state.current_question.text);
+                            updateTimer(state.timer_remaining, state.timer_active);
+                        }
+                    } else {
+                        showWaiting();
+                    }
+                } else if (state.current_question && !state.show_results) {
+                    // Only update timer if not showing results
+                    updateTimer(state.timer_remaining, state.timer_active);
+                }
+            } catch (error) {
+                console.error('State check error:', error);
+            }
+        }
+
+        function showWaiting() {
+            isShowingResults = false;
+            document.getElementById('waitingScreen').classList.remove('hide');
+            document.getElementById('questionScreen').classList.remove('show');
+            document.getElementById('resultsScreen').classList.remove('show');
+        }
+
+        function showQuestion(text) {
+            isShowingResults = false;
+            document.getElementById('waitingScreen').classList.add('hide');
+            document.getElementById('questionScreen').classList.add('show');
+            document.getElementById('resultsScreen').classList.remove('show');
+            document.getElementById('questionText').textContent = text;
+        }
+
+        function updateTimer(seconds, active) {
+            if (!active || isShowingResults) return;
+            
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            const timeStr = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+            document.getElementById('timerCountdown').textContent = timeStr;
+            
+            const timer = document.getElementById('timerDisplay');
+            if (seconds <= 10) {
+                timer.classList.add('warning');
+            } else {
+                timer.classList.remove('warning');
+            }
+        }
+
+        function showResults(question, winners) {
+            // STOP POLLING - Results are final!
+            isShowingResults = true;
+            
+            document.getElementById('waitingScreen').classList.add('hide');
+            document.getElementById('questionScreen').classList.remove('show');
+            document.getElementById('resultsScreen').classList.add('show');
+            document.getElementById('resultsQuestion').textContent = question;
+            
+            const grid = document.getElementById('winnersGrid');
+            grid.innerHTML = '';
+            
+            if (!winners || winners.length === 0) {
+                grid.innerHTML = '<p style="text-align:center; color:white; font-size:3rem; grid-column: 1/-1;">No votes cast!</p>';
+                return;
+            }
+            
+            // Show up to 10 winners
+            winners.slice(0, 10).forEach(w => {
+                const card = document.createElement('div');
+                card.className = 'winner-card';
+                card.innerHTML = `
+                    <div class="winner-icon">🏆</div>
+                    <div class="winner-info">
+                        <div class="winner-name">${w.name}</div>
+                        <div class="winner-team">${w.team} Team</div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // Poll every 1 second
+        setInterval(checkState, 1000);
+        checkState();
+    </script>
+</body>
+</html>

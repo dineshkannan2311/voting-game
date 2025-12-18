@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Vote - Office Legends</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%);
+            min-height: 100vh;
+            padding: 0;
+        }
+        
+        /* USER BAR */
+        .user-bar {
+            background: white;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .user-avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ff6b35, #ff8c42);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+        
+        .user-details h3 {
+            font-size: 1rem;
+            color: #2c3e50;
+            font-weight: 700;
+        }
+        
+        .user-details p {
+            font-size: 0.85rem;
+            color: #ff6b35;
+            font-weight: 600;
+        }
+        
+        .content {
+            padding: 20px;
+        }
+        
+        /* WAITING */
+        .waiting-card {
+            background: white;
+            border-radius: 20px;
+            padding: 50px 30px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-top: 30px;
+        }
+        
+        .waiting-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+        
+        .waiting-title {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .waiting-text {
+            font-size: 1rem;
+            color: #7f8c8d;
+            line-height: 1.6;
+        }
+        
+        /* QUESTION */
+        .question-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .question-card.show {
+            display: block;
+            animation: slideIn 0.5s ease;
+        }
+        
+        .question-label {
+            font-size: 0.75rem;
+            color: #ff6b35;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 800;
+            margin-bottom: 15px;
+        }
+        
+        .question-text {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #2c3e50;
+            line-height: 1.3;
+            margin-bottom: 20px;
+        }
+        
+        /* TIMER */
+        .timer-box {
+            background: linear-gradient(135deg, #ff6b35, #ff8c42);
+            border-radius: 16px;
+            padding: 25px;
+            text-align: center;
+        }
+        
+        .timer-time {
+            font-size: 3.5rem;
+            font-weight: 900;
+            color: white;
+            font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;
+            line-height: 1;
+        }
+        
+        .timer-label {
+            color: rgba(255,255,255,0.95);
+            font-size: 0.85rem;
+            margin-top: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .timer-box.warning {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+        
+        /* MEMBERS */
+        .members-section {
+            margin-top: 25px;
+            display: block;
+        }
+        
+        .members-section.hide {
+            display: none;
+        }
+        
+        .section-title {
+            color: white;
+            font-size: 1.3rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .members-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+        }
+        
+        .member-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .member-card:active {
+            transform: scale(0.97);
+        }
+        
+        .member-card.voted {
+            background: #d4edda;
+            border: 2px solid #28a745;
+            pointer-events: none;
+        }
+        
+        .member-card.voted::after {
+            content: '✓';
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: #28a745;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            font-weight: 900;
+        }
+        
+        .member-avatar {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ff6b35, #ff8c42);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin: 0 auto 12px;
+        }
+        
+        .member-name {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .vote-btn {
+            background: linear-gradient(135deg, #ff6b35, #ff8c42);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .vote-btn:active {
+            transform: translateY(-2px);
+        }
+        
+        /* RESULTS */
+        .results-section {
+            background: white;
+            border-radius: 20px;
+            padding: 30px 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            display: none;
+        }
+        
+        .results-section.show {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .results-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .results-title {
+            font-size: 2rem;
+            font-weight: 900;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .results-subtitle {
+            font-size: 1rem;
+            color: #7f8c8d;
+            font-weight: 600;
+        }
+        
+        .winner-card {
+            background: linear-gradient(135deg, #fff9e6, #ffe9a3);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.1);
+        }
+        
+        .winner-card.my-team {
+            background: linear-gradient(135deg, #d4edda, #c3e6cb);
+            border: 2px solid #28a745;
+            order: -1;
+        }
+        
+        .winner-medal {
+            font-size: 2.5rem;
+        }
+        
+        .winner-info {
+            flex: 1;
+        }
+        
+        .winner-name {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: #2c3e50;
+            margin-bottom: 3px;
+        }
+        
+        .winner-team {
+            font-size: 0.9rem;
+            color: #ff6b35;
+            font-weight: 700;
+        }
+        
+        /* TOAST */
+        .success-toast {
+            position: fixed;
+            bottom: -100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            padding: 16px 32px;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 700;
+            box-shadow: 0 8px 30px rgba(40, 167, 69, 0.4);
+            z-index: 1000;
+            transition: bottom 0.4s ease;
+        }
+        
+        .success-toast.show {
+            bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="user-bar">
+        <div class="user-info">
+            <div class="user-avatar" id="userAvatar">D</div>
+            <div class="user-details">
+                <h3 id="userName">Loading...</h3>
+                <p>Team: <span id="userTeam">...</span></p>
+            </div>
+        </div>
+    </div>
+
+    <div class="content">
+        <div class="waiting-card" id="waitingState">
+            <div class="waiting-icon">⏳</div>
+            <div class="waiting-title">Waiting for Question</div>
+            <div class="waiting-text">Get ready! A question will appear soon.</div>
+        </div>
+
+        <div class="question-card" id="questionCard">
+            <div class="question-label">Question</div>
+            <div class="question-text" id="questionText"></div>
+            
+            <div class="timer-box" id="timerBox">
+                <div class="timer-time" id="timerTime">00:30</div>
+                <div class="timer-label">Time Left</div>
+            </div>
+        </div>
+
+        <div class="members-section" id="membersSection">
+            <div class="section-title">Select a Team Member</div>
+            <div class="members-grid" id="membersGrid"></div>
+        </div>
+
+        <div class="results-section" id="resultsSection">
+            <div class="results-header">
+                <div class="results-title">🏆 Winners 🏆</div>
+                <div class="results-subtitle" id="resultsQuestion"></div>
+            </div>
+            <div id="resultsContent"></div>
+        </div>
+    </div>
+
+    <div class="success-toast" id="successToast">✓ Vote Submitted!</div>
+
+    <script>
+        const API_URL = window.location.origin;
+        const userName = sessionStorage.getItem('userName');
+        const userTeam = sessionStorage.getItem('userTeam');
+        const userTeamId = parseInt(sessionStorage.getItem('userTeamId'));
+        const userId = parseInt(sessionStorage.getItem('userId'));
+
+        if (!userName) {
+            window.location.href = 'login.html';
+        }
+
+        document.getElementById('userName').textContent = userName;
+        document.getElementById('userTeam').textContent = userTeam;
+        document.getElementById('userAvatar').textContent = userName.charAt(0).toUpperCase();
+
+        let hasVoted = false;
+        let currentQuestionId = null;
+        let isShowingResults = false;
+
+        async function loadMembers() {
+            try {
+                const response = await fetch(`${API_URL}/api/members?team_id=${userTeamId}&exclude_id=${userId}`);
+                const members = await response.json();
+                const grid = document.getElementById('membersGrid');
+                grid.innerHTML = '';
+                
+                members.forEach(member => {
+                    const initials = member.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+                    const card = document.createElement('div');
+                    card.className = 'member-card';
+                    card.innerHTML = `
+                        <div class="member-avatar">${initials}</div>
+                        <div class="member-name">${member.name}</div>
+                        <button class="vote-btn" onclick="vote('${member.name.replace(/'/g, "\\'")}', this)">Vote</button>
+                    `;
+                    grid.appendChild(card);
+                });
+            } catch (error) {
+                console.error('Error loading members:', error);
+            }
+        }
+
+        async function checkState() {
+            if (isShowingResults) return; // Stop polling when showing results
+
+            try {
+                const response = await fetch(`${API_URL}/api/current-state`);
+                const state = await response.json();
+                
+                if (state.current_question) {
+                    if (currentQuestionId !== state.current_question.id) {
+                        currentQuestionId = state.current_question.id;
+                        hasVoted = false;
+                        isShowingResults = false;
+                        showQuestion(state.current_question.text);
+                        loadMembers();
+                    }
+                    
+                    if (!isShowingResults) {
+                        updateTimer(state.timer_remaining, state.timer_active);
+                    }
+                    
+                    if (state.show_results && state.results && !isShowingResults) {
+                        showResults(state.current_question.text, state.results);
+                    }
+                } else {
+                    isShowingResults = false;
+                    showWaiting();
+                }
+            } catch (error) {
+                console.error('State check error:', error);
+            }
+        }
+
+        function showWaiting() {
+            document.getElementById('waitingState').style.display = 'block';
+            document.getElementById('questionCard').classList.remove('show');
+            document.getElementById('membersSection').classList.add('hide');
+            document.getElementById('resultsSection').classList.remove('show');
+        }
+
+        function showQuestion(text) {
+            document.getElementById('waitingState').style.display = 'none';
+            document.getElementById('questionCard').classList.add('show');
+            document.getElementById('membersSection').classList.remove('hide');
+            document.getElementById('resultsSection').classList.remove('show');
+            document.getElementById('questionText').textContent = text;
+        }
+
+        function updateTimer(seconds, active) {
+            if (!active) return;
+            
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            const timeStr = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+            document.getElementById('timerTime').textContent = timeStr;
+            
+            const timerBox = document.getElementById('timerBox');
+            if (seconds <= 10) {
+                timerBox.classList.add('warning');
+            } else {
+                timerBox.classList.remove('warning');
+            }
+        }
+
+        function showResults(question, winners) {
+            isShowingResults = true; // Stop polling
+            
+            document.getElementById('questionCard').classList.remove('show');
+            document.getElementById('membersSection').classList.add('hide');
+            document.getElementById('resultsSection').classList.add('show');
+            document.getElementById('resultsQuestion').textContent = question;
+            
+            const content = document.getElementById('resultsContent');
+            content.innerHTML = '';
+            
+            if (winners.length === 0) {
+                content.innerHTML = '<p style="text-align:center; color:#7f8c8d; padding:40px;">No votes yet!</p>';
+                return;
+            }
+            
+            // Show YOUR TEAM FIRST, then others
+            winners.forEach(w => {
+                const card = document.createElement('div');
+                card.className = 'winner-card';
+                if (w.team === userTeam) {
+                    card.classList.add('my-team');
+                }
+                card.innerHTML = `
+                    <div class="winner-medal">🏆</div>
+                    <div class="winner-info">
+                        <div class="winner-name">${w.name}</div>
+                        <div class="winner-team">${w.team} Team</div>
+                    </div>
+                `;
+                content.appendChild(card);
+            });
+        }
+
+        async function vote(memberName, button) {
+            if (hasVoted) {
+                showToast('You already voted!');
+                return;
+            }
+            
+            try {
+                const card = button.closest('.member-card');
+                card.classList.add('voted');
+                
+                const response = await fetch(`${API_URL}/api/vote`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        questionId: currentQuestionId,
+                        voterId: userId,
+                        voterName: userName,
+                        voteeName: memberName,
+                        teamId: userTeamId
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    hasVoted = true;
+                    showToast(`✓ Voted for ${memberName}!`);
+                } else {
+                    card.classList.remove('voted');
+                    showToast(result.message || 'Vote failed!');
+                }
+            } catch (error) {
+                console.error('Vote error:', error);
+                showToast('Failed to submit vote');
+            }
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('successToast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        loadMembers();
+        setInterval(checkState, 1000);
+        checkState();
+    </script>
+</body>
+</html>
