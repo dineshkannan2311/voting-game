@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Connection Test</title>
+    <style>
+        body { font-family: Arial; padding: 20px; background: #f5f5f5; }
+        .status { padding: 20px; margin: 10px 0; border-radius: 10px; font-weight: bold; }
+        .connected { background: #d4edda; color: #155724; }
+        .disconnected { background: #f8d7da; color: #721c24; }
+        .event { background: #fff3cd; color: #856404; }
+        button { padding: 15px 30px; font-size: 16px; margin: 10px; cursor: pointer; border-radius: 5px; border: none; }
+        .btn-broadcast { background: #28a745; color: white; }
+        .btn-clear { background: #dc3545; color: white; }
+        #log { background: white; padding: 20px; border-radius: 10px; margin-top: 20px; max-height: 400px; overflow-y: auto; }
+        .log-item { padding: 5px; border-bottom: 1px solid #eee; }
+    </style>
+</head>
+<body>
+    <h1>🔍 WebSocket Connection Test</h1>
+    
+    <div id="connectionStatus" class="status disconnected">
+        ❌ Not Connected
+    </div>
+    
+    <button class="btn-broadcast" onclick="testBroadcast()">Test Broadcast</button>
+    <button class="btn-clear" onclick="clearLogs()">Clear Logs</button>
+    
+    <div id="log"></div>
+    
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script>
+        const API_URL = 'http://localhost:5000/api';
+        let socket;
+        
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const item = document.createElement('div');
+            item.className = 'log-item';
+            item.innerHTML = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logDiv.insertBefore(item, logDiv.firstChild);
+        }
+        
+        function updateStatus(connected) {
+            const statusDiv = document.getElementById('connectionStatus');
+            if (connected) {
+                statusDiv.className = 'status connected';
+                statusDiv.textContent = '✅ Connected to Server';
+            } else {
+                statusDiv.className = 'status disconnected';
+                statusDiv.textContent = '❌ Not Connected';
+            }
+        }
+        
+        // Connect to WebSocket
+        log('Attempting to connect to WebSocket...');
+        socket = io('http://localhost:5000', {
+            transports: ['websocket', 'polling']
+        });
+        
+        socket.on('connect', () => {
+            log('✅ WebSocket CONNECTED!', 'success');
+            updateStatus(true);
+        });
+        
+        socket.on('disconnect', () => {
+            log('❌ WebSocket DISCONNECTED', 'error');
+            updateStatus(false);
+        });
+        
+        socket.on('question_broadcast', (data) => {
+            log(`📢 RECEIVED question_broadcast: ${JSON.stringify(data)}`, 'event');
+        });
+        
+        socket.on('timer_update', (data) => {
+            log(`⏱️ RECEIVED timer_update: ${data.remaining}s`, 'event');
+        });
+        
+        socket.on('show_results', (data) => {
+            log(`🏆 RECEIVED show_results: ${JSON.stringify(data)}`, 'event');
+        });
+        
+        socket.on('question_cleared', () => {
+            log(`❌ RECEIVED question_cleared`, 'event');
+        });
+        
+        async function testBroadcast() {
+            log('Sending broadcast request...');
+            try {
+                const response = await fetch(`${API_URL}/admin/broadcast`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        question: 'Who is the funniest person in the office?' 
+                    })
+                });
+                const result = await response.json();
+                log(`✅ Broadcast API response: ${JSON.stringify(result)}`);
+            } catch (error) {
+                log(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+        
+        function clearLogs() {
+            document.getElementById('log').innerHTML = '';
+        }
+    </script>
+</body>
+</html>
