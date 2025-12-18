@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vote Now - Office Legends</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%);
+            min-height: 100vh;
+            padding: 15px;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .user-header {
+            background: rgba(255,255,255,0.25);
+            backdrop-filter: blur(15px);
+            padding: 20px 25px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        .user-info { display: flex; align-items: center; gap: 15px; }
+        .user-avatar {
+            width: 55px; height: 55px; background: white; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.6rem; font-weight: 900; color: #ff6b35;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .user-details { }
+        .user-name { font-size: 1.6rem; font-weight: 800; margin-bottom: 3px; }
+        .user-team { font-size: 1rem; opacity: 0.9; }
+        .status-indicator { display: flex; align-items: center; gap: 8px; }
+        .status-dot {
+            width: 12px; height: 12px; background: #2ecc71; 
+            border-radius: 50%; animation: pulse 2s infinite;
+            box-shadow: 0 0 10px #2ecc71;
+        }
+        @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.9); } }
+        .status-text { font-size: 0.9rem; font-weight: 600; }
+        
+        .waiting-state {
+            background: white; border-radius: 25px; padding: 60px 30px;
+            text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .waiting-icon { font-size: 5rem; margin-bottom: 20px; animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+        .waiting-title { font-size: 2.2rem; font-weight: 800; color: #2c3e50; margin-bottom: 12px; }
+        .waiting-text { font-size: 1.2rem; color: #7f8c8d; }
+        
+        .question-card {
+            background: white; border-radius: 25px; padding: 35px;
+            margin-bottom: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            display: none;
+        }
+        .question-card.show { display: block; animation: slideIn 0.5s ease; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
+        .question-label {
+            font-size: 0.9rem; color: #7f8c8d; margin-bottom: 12px;
+            font-weight: 700; text-transform: uppercase; letter-spacing: 2px;
+        }
+        .question-text {
+            font-size: 2.2rem; color: #2c3e50; font-weight: 800;
+            margin-bottom: 20px; line-height: 1.3;
+        }
+        .timer-display {
+            display: flex; align-items: center; justify-content: center; gap: 12px;
+            padding: 20px; background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%);
+            border-radius: 15px; color: white;
+        }
+        .timer-icon { font-size: 2rem; }
+        .timer-text {
+            font-size: 3rem; font-weight: 900;
+            font-family: 'Courier New', monospace;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        .timer-warning {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            animation: shake 0.5s infinite;
+        }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+        
+        .members-section { display: block; margin-top: 25px; }
+        .members-section.hide { display: none; }
+        .section-title {
+            text-align: center; color: white; font-size: 1.8rem;
+            font-weight: 800; margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        .members-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        .member-card {
+            background: white; border-radius: 18px; padding: 25px 18px;
+            text-align: center; cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            border: 3px solid transparent;
+        }
+        .member-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 15px 40px rgba(255, 107, 53, 0.4);
+            border-color: #ff6b35;
+        }
+        .member-card.voted {
+            border-color: #2ecc71;
+            background: linear-gradient(135deg, #e8f8f5 0%, #d5f4e6 100%);
+            pointer-events: none;
+        }
+        .member-avatar {
+            width: 90px; height: 90px; border-radius: 50%;
+            background: linear-gradient(135deg, #ff6b35, #ff8c42);
+            color: white; display: flex; align-items: center;
+            justify-content: center; font-size: 2.2rem;
+            font-weight: 900; margin: 0 auto 15px;
+            border: 4px solid white;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+        }
+        .member-name {
+            font-size: 1.3rem; font-weight: 700;
+            color: #2c3e50; margin-bottom: 12px;
+        }
+        .vote-button {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            color: white; border: none; padding: 10px 25px;
+            border-radius: 20px; font-size: 1rem;
+            font-weight: 700; cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+        .vote-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(46, 204, 113, 0.4);
+        }
+        
+        .results-section {
+            background: white; border-radius: 25px; padding: 35px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            display: none;
+        }
+        .results-section.show { display: block; animation: slideIn 0.5s ease; }
+        .results-title {
+            text-align: center; font-size: 2.5rem;
+            font-weight: 900; color: #2c3e50; margin-bottom: 25px;
+            display: flex; align-items: center; justify-content: center; gap: 15px;
+        }
+        .winner-grid {
+            display: grid; gap: 15px;
+            max-height: 70vh; overflow-y: auto;
+        }
+        .winner-box {
+            background: linear-gradient(135deg, #fff9e6 0%, #ffe9a3 100%);
+            border-radius: 18px; padding: 25px;
+            border-left: 6px solid #f39c12;
+            animation: slideIn 0.6s ease;
+            display: flex; align-items: center;
+            justify-content: space-between; gap: 15px;
+        }
+        .winner-box.rank-1 {
+            background: linear-gradient(135deg, #fff9e6 0%, #ffd700 50%);
+            border-left-color: #FFD700;
+            border-left-width: 8px;
+        }
+        .winner-box.rank-2 {
+            background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 50%);
+            border-left-color: #C0C0C0;
+        }
+        .winner-box.rank-3 {
+            background: linear-gradient(135deg, #fff5e6 0%, #ffcc99 50%);
+            border-left-color: #CD7F32;
+        }
+        .winner-info { flex: 1; }
+        .winner-rank { font-size: 3rem; font-weight: 900; color: #e67e22; line-height: 1; }
+        .winner-name { font-size: 1.8rem; font-weight: 800; color: #2c3e50; margin-bottom: 5px; }
+        .winner-team { font-size: 1.1rem; color: #7f8c8d; font-weight: 600; }
+        .winner-votes {
+            background: white; padding: 15px 25px;
+            border-radius: 12px; text-align: center;
+        }
+        .votes-number { font-size: 2.5rem; font-weight: 900; color: #e74c3c; line-height: 1; }
+        .votes-label { font-size: 0.9rem; color: #7f8c8d; text-transform: uppercase; letter-spacing: 1px; }
+        
+        .success-message {
+            position: fixed; bottom: 30px; left: 50%;
+            transform: translateX(-50%); z-index: 1000;
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            color: white; padding: 20px 40px;
+            border-radius: 50px; font-size: 1.3rem;
+            font-weight: 800; box-shadow: 0 15px 50px rgba(46, 204, 113, 0.5);
+            display: none;
+        }
+        .success-message.show { display: block; animation: slideUp 0.5s ease; }
+        @keyframes slideUp { from { transform: translateX(-50%) translateY(100px); opacity: 0; } to { transform: translateX(-50%) translateY(0); opacity: 1; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="user-header">
+            <div class="user-info">
+                <div class="user-avatar" id="userAvatar">D</div>
+                <div class="user-details">
+                    <div class="user-name" id="userName">Loading...</div>
+                    <div class="user-team">Team: <span id="userTeam">...</span></div>
+                </div>
+            </div>
+            <div class="status-indicator">
+                <div class="status-dot"></div>
+                <div class="status-text">Connected</div>
+            </div>
+        </div>
+
+        <div class="waiting-state" id="waitingState">
+            <div class="waiting-icon">⏳</div>
+            <div class="waiting-title">Waiting for Question...</div>
+            <div class="waiting-text">The admin will broadcast a question soon!</div>
+        </div>
+
+        <div class="question-card" id="questionCard">
+            <div class="question-label">📋 CURRENT QUESTION</div>
+            <div class="question-text" id="questionText"></div>
+            <div class="timer-display" id="timerDisplay">
+                <div class="timer-icon">⏱️</div>
+                <div class="timer-text" id="timerText">00:30</div>
+            </div>
+        </div>
+
+        <div class="members-section" id="membersSection">
+            <div class="section-title">👥 Vote for a Team Member</div>
+            <div class="members-grid" id="membersGrid"></div>
+        </div>
+
+        <div class="results-section" id="resultsSection">
+            <div class="results-title">
+                <span>🏆</span>
+                <span>RESULTS</span>
+                <span>🏆</span>
+            </div>
+            <div class="winner-grid" id="resultsContent"></div>
+        </div>
+    </div>
+
+    <div class="success-message" id="successMessage">✓ Vote Submitted Successfully!</div>
+
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script>
+        const API_URL = window.location.origin;
+        const userName = sessionStorage.getItem('userName');
+        const userTeam = sessionStorage.getItem('userTeam');
+        const userTeamId = parseInt(sessionStorage.getItem('userTeamId'));
+        const userId = parseInt(sessionStorage.getItem('userId'));
+
+        if (!userName) {
+            window.location.href = 'login.html';
+        }
+
+        document.getElementById('userName').textContent = userName;
+        document.getElementById('userTeam').textContent = userTeam;
+        document.getElementById('userAvatar').textContent = userName.charAt(0).toUpperCase();
+
+        const socket = io(API_URL, {
+            transports: ['websocket', 'polling'],
+            reconnection: true
+        });
+
+        let currentQuestionId = null;
+        let hasVoted = false;
+
+        socket.on('connect', () => {
+            console.log('✅ Connected to server');
+        });
+
+        socket.on('disconnect', () => {
+            console.log('❌ Disconnected from server');
+        });
+
+        async function loadMembers() {
+            try {
+                const response = await fetch(`${API_URL}/api/members?team_id=${userTeamId}&exclude_id=${userId}`);
+                const members = await response.json();
+                const grid = document.getElementById('membersGrid');
+                grid.innerHTML = '';
+                
+                members.forEach(member => {
+                    const initials = member.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+                    const card = document.createElement('div');
+                    card.className = 'member-card';
+                    card.innerHTML = `
+                        <div class="member-avatar">${initials}</div>
+                        <div class="member-name">${member.name}</div>
+                        <button class="vote-button" onclick="vote('${member.name}', this)">✓ VOTE</button>
+                    `;
+                    grid.appendChild(card);
+                });
+            } catch (error) {
+                console.error('Error loading members:', error);
+            }
+        }
+
+        loadMembers();
+
+        socket.on('question_broadcast', (data) => {
+            console.log('📢 Question broadcast received:', data);
+            currentQuestionId = data.questionId;
+            hasVoted = false;
+            
+            document.getElementById('waitingState').style.display = 'none';
+            document.getElementById('questionCard').classList.add('show');
+            document.getElementById('membersSection').classList.remove('hide');
+            document.getElementById('resultsSection').classList.remove('show');
+            
+            document.getElementById('questionText').textContent = data.question;
+            
+            startTimer(data.duration);
+            loadMembers();
+        });
+
+        let timerSeconds = 0;
+        
+        function startTimer(duration) {
+            timerSeconds = duration;
+            updateTimerDisplay();
+        }
+
+        socket.on('timer_update', (data) => {
+            timerSeconds = data.remaining;
+            updateTimerDisplay();
+        });
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timerSeconds / 60);
+            const seconds = timerSeconds % 60;
+            document.getElementById('timerText').textContent = 
+                `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            
+            const timerBox = document.getElementById('timerDisplay');
+            if (timerSeconds <= 10 && timerSeconds > 0) {
+                timerBox.classList.add('timer-warning');
+            } else {
+                timerBox.classList.remove('timer-warning');
+            }
+        }
+
+        socket.on('show_results', (data) => {
+            console.log('🏆 Results received:', data);
+            
+            document.getElementById('questionCard').classList.remove('show');
+            document.getElementById('membersSection').classList.add('hide');
+            document.getElementById('resultsSection').classList.add('show');
+            
+            const resultsContent = document.getElementById('resultsContent');
+            resultsContent.innerHTML = '';
+            
+            if (data.winners && data.winners.length > 0) {
+                data.winners.forEach((winner, index) => {
+                    const box = document.createElement('div');
+                    box.className = `winner-box rank-${winner.rank}`;
+                    
+                    const medal = winner.rank === 1 ? '🥇' : winner.rank === 2 ? '🥈' : winner.rank === 3 ? '🥉' : '🏅';
+                    
+                    box.innerHTML = `
+                        <div class="winner-rank">${medal}</div>
+                        <div class="winner-info">
+                            <div class="winner-name">${winner.name}</div>
+                            <div class="winner-team">${winner.team}</div>
+                        </div>
+                        <div class="winner-votes">
+                            <div class="votes-number">${winner.votes}</div>
+                            <div class="votes-label">votes</div>
+                        </div>
+                    `;
+                    resultsContent.appendChild(box);
+                });
+            } else {
+                resultsContent.innerHTML = '<p style="text-align:center; font-size:1.5rem; color:#7f8c8d; padding:40px;">No votes recorded yet!</p>';
+            }
+        });
+
+        socket.on('question_cleared', () => {
+            console.log('❌ Question cleared');
+            document.getElementById('waitingState').style.display = 'block';
+            document.getElementById('questionCard').classList.remove('show');
+            document.getElementById('membersSection').classList.add('hide');
+            document.getElementById('resultsSection').classList.remove('show');
+            currentQuestionId = null;
+            hasVoted = false;
+        });
+
+        async function vote(memberName, button) {
+            if (!currentQuestionId) {
+                alert('No active question!');
+                return;
+            }
+            
+            if (hasVoted) {
+                alert('You have already voted for this question!');
+                return;
+            }
+            
+            try {
+                const card = button.closest('.member-card');
+                card.classList.add('voted');
+                
+                const response = await fetch(`${API_URL}/api/vote`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        questionId: currentQuestionId,
+                        voterId: userId,
+                        voterName: userName,
+                        voteeName: memberName,
+                        teamId: userTeamId
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    hasVoted = true;
+                    const msg = document.getElementById('successMessage');
+                    msg.textContent = `✓ Voted for ${memberName}!`;
+                    msg.classList.add('show');
+                    setTimeout(() => msg.classList.remove('show'), 3000);
+                } else {
+                    card.classList.remove('voted');
+                    alert(result.message || 'Vote failed!');
+                }
+            } catch (error) {
+                console.error('Vote error:', error);
+                alert('Failed to submit vote. Please try again.');
+            }
+        }
+    </script>
+</body>
+</html>
